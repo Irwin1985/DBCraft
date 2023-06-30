@@ -85,6 +85,9 @@ Procedure executeScript(tcScript)
 	#ifndef ttMinus	
 		#Define ttMinus 26
 	#Endif
+	#ifndef ttAutoIncrement
+		#Define ttAutoIncrement 27
+	#Endif
 
 	Local loScanner, laTokens
 	loScanner = Createobject("Scanner", tcScript)
@@ -382,6 +385,8 @@ Function tokenName(tnType)
 		Return "ttColon"
 	Case tnType == 26
 		Return "ttMinus"
+	Case tnType == 27
+		Return "ttAutoIncrement"
 	OTHERWISE
 	ENDCASE
 EndFunc
