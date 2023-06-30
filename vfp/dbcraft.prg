@@ -1,6 +1,11 @@
 * Sample
 Clear
-executeScript("-")
+Local lcScript
+lcScript = FileToStr("F:\Desarrollo\Mini_ERP\Sical\Conmod.tmg")
+If Right(lcScript, 1) != Chr(10)
+	lcScript = lcScript + Chr(10)
+EndIf
+executeScript(lcScript)
 * End Sample
 
 * =================================================================================== *
@@ -85,17 +90,34 @@ Procedure executeScript(tcScript)
 	#ifndef ttMinus	
 		#Define ttMinus 26
 	#Endif
-	#ifndef ttAutoIncrement
-		#Define ttAutoIncrement 27
+	#ifndef ttTrue
+		#Define ttTrue 27
 	#Endif
-
+	#ifndef ttFalse
+		#Define ttFalse 28
+	#Endif
+	#ifndef ttAutoIncrement
+		#Define ttAutoIncrement 29
+	#Endif
+	#ifndef ttNewLine
+		#Define ttNewLine 30
+	#Endif	
 	Local loScanner, laTokens
 	loScanner = Createobject("Scanner", tcScript)
 	laTokens = loScanner.scanTokens()
-
+	lcFile = "F:\Desarrollo\Mini_ERP\rutinas\tokens.txt"
+	If File(lcFile)
+		try
+			Delete File &lcFile
+		Catch
+		EndTry
+	EndIf
 	For Each loToken In laTokens
-		? loToken.toString()
-	Endfor
+		lcText = loToken.toString()
+		lcText = lcText + Chr(13) + Chr(10)
+		=StrToFile(lcText, lcFile, 1)
+	EndFor
+	Modify File (lcFile)
 Endproc
 
 * =================================================================================== *
@@ -111,6 +133,7 @@ Define Class Scanner As Custom
 		nSourceLen, ;
 		cLetters, ;
 		nLine, ;
+		nCol, ;
 		oKeywords
 
 	cSource = ''
@@ -118,9 +141,11 @@ Define Class Scanner As Custom
 	nCurrent = 1
 	cLetters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_'
 	nLine = 1
+	nCol = 0
 	nCapacity = 0
 	nLength = 1
 	nSourceLen = 0
+	nTokenAnt = 0
 
 	Dimension aTokens[1]
 
@@ -130,33 +155,39 @@ Define Class Scanner As Custom
 
 		* Create keywords
 		This.oKeywords = Createobject("Scripting.Dictionary")
-		This.oKeywords.Add('table', Createobject("Token", ttTable))
-		This.oKeywords.Add('description', Createobject("Token", ttDescription))
-		This.oKeywords.Add('fields', Createobject("Token", ttFields))
+		This.oKeywords.Add('table', ttTable)
+		This.oKeywords.Add('description', ttDescription)
+		This.oKeywords.Add('fields', ttFields)
 
 		* Fields attributes
-		This.oKeywords.Add('name', Createobject("Token", ttName))
-		This.oKeywords.Add('type', Createobject("Token", ttType))
-		This.oKeywords.Add('size', Createobject("Token", ttSize))
-		This.oKeywords.Add('primaryKey', Createobject("Token", ttPrimaryKey))
-		This.oKeywords.Add('allowNull', Createobject("Token", ttAllowNull))
+		This.oKeywords.Add('name', ttName)
+		This.oKeywords.Add('type', ttType)
+		This.oKeywords.Add('size', ttSize)
+		This.oKeywords.Add('primaryKey', ttPrimaryKey)
+		This.oKeywords.Add('allowNull', ttAllowNull)
+		This.oKeywords.Add('autoIncrement', ttAutoIncrement)
 
+		* Data Types
+		This.oKeywords.Add('true', ttTrue)
+		This.oKeywords.Add('false', ttFalse)
+		
 		* Table data types
-		This.oKeywords.Add('char', Createobject("Token", ttChar))
-		This.oKeywords.Add('varchar', Createobject("Token", ttVarchar))
-		This.oKeywords.Add('decimal', Createobject("Token", ttDecimal))
-		This.oKeywords.Add('date', Createobject("Token", ttDate))
-		This.oKeywords.Add('dateTime', Createobject("Token", ttDateTime))
-		This.oKeywords.Add('double', Createobject("Token", ttDouble))
-		This.oKeywords.Add('float', Createobject("Token", ttFloat))
-		This.oKeywords.Add('int', Createobject("Token", ttInt))
-		This.oKeywords.Add('bool', Createobject("Token", ttBool))
-		This.oKeywords.Add('text', Createobject("Token", ttText))
-		This.oKeywords.Add('varBinary', Createobject("Token", ttVarBinary))
-		This.oKeywords.Add('blob', Createobject("Token", ttBlob))
+		This.oKeywords.Add('char', ttChar)
+		This.oKeywords.Add('varchar', ttVarchar)
+		This.oKeywords.Add('decimal', ttDecimal)
+		This.oKeywords.Add('date', ttDate)
+		This.oKeywords.Add('dateTime', ttDateTime)
+		This.oKeywords.Add('double', ttDouble)
+		This.oKeywords.Add('float', ttFloat)
+		This.oKeywords.Add('int', ttInt)
+		This.oKeywords.Add('bool', ttBool)
+		This.oKeywords.Add('text', ttText)
+		This.oKeywords.Add('varBinary', ttVarBinary)
+		This.oKeywords.Add('blob', ttBlob)
 	Endproc
 
 	Hidden Function advance
+		this.nCol = this.nCol + 1
 		This.nCurrent = This.nCurrent + 1
 		Return Substr(This.cSource, This.nCurrent-1, 1)
 	Endfunc
@@ -177,32 +208,30 @@ Define Class Scanner As Custom
 
 	Hidden Procedure skipWhitespace
 		Local ch
-		Do While Inlist(This.peek(), Chr(9), Chr(10), Chr(13), Chr(32))
-			ch = This.advance()
-			If ch == Chr(10)
-				This.nLine = This.nLine + 1
-			Endif
+		Do While Inlist(This.peek(), Chr(9), Chr(32))
+			This.advance()
 		Enddo
 	Endproc
 
-	Hidden Function readIdentifier
-		Local lcLexeme
+	Hidden procedure readIdentifier
+		Local lcLexeme, lnCol, lnTokenType
+		lnCol = this.nCol-1
+		lnTokenType = ttIdent
 		Do While At(This.peek(), This.cLetters) > 0
 			This.advance()
 		Enddo
-
 		lcLexeme = Substr(This.cSource, This.nStart, This.nCurrent-This.nStart)
 		If This.oKeywords.Exists(lcLexeme)
-			Return This.oKeywords.Item(lcLexeme)
+			lnTokenType = This.oKeywords.Item(lcLexeme)
 		Endif
+		This.addToken(lnTokenType, lcLexeme, lnCol)
+	EndProc
 
-		Return This.addToken(ttIdent, lcLexeme)
-	Endfunc
-
-	Hidden Function readNumber
-		Local lcLexeme, llIsNegative
+	Hidden procedure readNumber
+		Local lcLexeme, llIsNegative, lnCol
 		lcLexeme = ''
 		llIsNegative = This.peek() == '-'
+		lnCol = this.nCol-1
 		If llIsNegative
 			This.advance()
 		Endif
@@ -220,22 +249,23 @@ Define Class Scanner As Custom
 
 		lcLexeme = Substr(This.cSource, This.nStart, This.nCurrent-This.nStart)
 
-		Return This.addToken(ttNumber, lcLexeme)
-	Endfunc
+		Return This.addToken(ttNumber, lcLexeme, lnCol)
+	EndProc
 
-	Hidden Function readString(tcStopChar)
-		Local lcLexeme, ch
-		Do While !This.isAtEnd()
+	Hidden procedure readString(tcStopChar)
+		Local lcLexeme, ch, lnCol
+		lnCol = this.nCol-1
+		Do While !this.isAtEnd()
 			ch = This.peek()
-			If ch == tcStopChar
-				This.advance()
+			This.advance()
+			If ch == tcStopChar				
 				Exit
 			Endif
 		Enddo
 		lcLexeme = Substr(This.cSource, This.nStart+1, This.nCurrent-This.nStart-2)
 
-		Return This.addToken(ttString, lcLexeme)
-	Endfunc
+		Return This.addToken(ttString, lcLexeme, lnCol)
+	EndProc
 
 	Function scanTokens
 		Dimension This.aTokens[1]
@@ -259,31 +289,39 @@ Define Class Scanner As Custom
 		ch = This.advance()
 		Do Case
 		Case ch == ':'
-			Return This.addToken(ttColon, ch)
-
+			This.addToken(ttColon, ch)			
 		Case ch == '-' And !Isdigit(This.peek())
-			Return This.addToken(ttMinus, ch)
-
+			This.addToken(ttMinus, ch)
 		Case Inlist(ch, '"', "'")
-			Return This.readString(ch)
-
+			This.readString(ch)
+		Case ch == Chr(13)
+			If this.nTokenAnt == 0 or this.nTokenAnt != ttNewLine
+				this.addToken(ttNewLine)
+			EndIf
+			this.advance() && skip chr(10)
+			this.nLine = this.nLine + 1
+			this.nCol = 1		
 		Otherwise
 			If Isdigit(ch) Or (ch == '-' And Isdigit(This.peek()))
-				Return This.readNumber()
+				This.readNumber()
+				Return
 			Endif
 			If At(ch, This.cLetters) > 0
-				Return This.readIdentifier()
+				This.readIdentifier()
+				Return
 			Endif
 			This.showError(This.nLine, "Unknown character ['" + Transform(ch) + "'], ascii: [" + Transform(Asc(ch)) + "]")
 		Endcase
 	Endproc
 
-	Hidden Procedure addToken(tnType, tvLiteral)
+	Hidden Procedure addToken(tnType, tvLiteral, tnCol)
 		This.checkCapacity()
-		Local loToken
-		loToken = Createobject("Token", tnType, "", tvLiteral, This.nLine)
+		Local loToken,lnCol
+		lnCol = Iif(Empty(tnCol), this.nCol, tnCol)
+		loToken = Createobject("Token", tnType, "", tvLiteral, This.nLine, lnCol)
 		This.aTokens[this.nLength] = loToken
 		This.nLength = This.nLength + 1
+		this.nTokenAnt = tnType
 	Endproc
 
 	Hidden Procedure checkCapacity
@@ -315,16 +353,25 @@ Define Class Token As Custom
 	cLexeme = ''
 	vLiteral = .Null.
 	nLine = 0
+	nCol = 0
 
-	Procedure Init(tnType, tcLexeme, tvLiteral, tnLine)
+	Procedure Init(tnType, tcLexeme, tvLiteral, tnLine, tnCol)
 		This.nType = tnType
 		This.cLexeme = Iif(Type('tcLexeme') != 'C', '', tcLexeme)
 		This.vLiteral = tvLiteral
 		This.nLine = Iif(Type('tnLine') != 'N', 0, tnLine)
+		this.nCol = Iif(Type('tnCol') != 'N', 0, tnCol)
 	Endproc
 
 	Function toString
-		Return "Token(" + TokenName(This.nType) + ", '" + This.cLexeme + "') at Line(" + Alltrim(Str(This.nLine)) + ")"
+		Try
+			Local lcString
+			lcString = "[" + Alltrim(Str(This.nLine)) + ":" + Alltrim(Str(This.nCol)) + "](" + TokenName(This.nType) + ", " + Transform(This.vLiteral) + ")"
+		Catch to loEx
+			Set Step On
+			MessageBox(loEx.message)
+		EndTry
+		Return lcString
 	Endfunc
 Enddefine
 
@@ -386,7 +433,13 @@ Function tokenName(tnType)
 	Case tnType == 26
 		Return "ttMinus"
 	Case tnType == 27
+		Return "ttTrue"
+	Case tnType == 28
+		Return "ttFalse"
+	Case tnType == 29
 		Return "ttAutoIncrement"
-	OTHERWISE
-	ENDCASE
+	Case tnType == 30
+		Return "ttNewLine"
+	Otherwise
+	EndCase
 EndFunc
