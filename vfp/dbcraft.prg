@@ -49,42 +49,45 @@ Procedure executeScript(tcScript)
 	#ifndef ttAllowNull
 		#Define ttAllowNull 8
 	#Endif
+	* ======================================= *
+	* Table data types
+	* ======================================= *
 	#ifndef ttChar
-		#Define ttChar 9
+		#Define ttChar 200
 	#Endif
 	#ifndef ttVarchar
-		#Define ttVarchar 10
+		#Define ttVarchar 201
 	#Endif
 	#ifndef ttDecimal
-		#Define ttDecimal 11
+		#Define ttDecimal 202
 	#Endif
 	#ifndef ttDate
-		#Define ttDate 12
+		#Define ttDate 203
 	#Endif
 	#ifndef ttDateTime
-		#Define ttDateTime 13
+		#Define ttDateTime 204
 	#Endif
 	#ifndef ttDouble
-		#Define ttDouble 14
+		#Define ttDouble 205
 	#Endif
 	#ifndef ttFloat
-		#Define ttFloat 15
+		#Define ttFloat 206
 	#Endif
 	#ifndef ttInt
-		#Define ttInt 16
+		#Define ttInt 207
 	#Endif
 	#ifndef ttBool
-		#Define ttBool 17
+		#Define ttBool 208
 	#Endif
 	#ifndef ttText
-		#Define ttText 18
+		#Define ttText 209
 	#Endif
 	#ifndef ttVarBinary
-		#Define ttVarBinary 19
+		#Define ttVarBinary 210
 	#Endif
 	#ifndef ttBlob
-		#Define ttBlob 20
-	#Endif
+		#Define ttBlob 211
+	#Endif	
 	#ifndef ttIdent
 		#Define ttIdent 21
 	#Endif
@@ -119,6 +122,7 @@ Procedure executeScript(tcScript)
 	Local loScanner, laTokens, llPrintTokens
 	loScanner = Createobject("Scanner", tcScript)
 	laTokens = loScanner.scanTokens()
+	llPrintTokens = .f.
 	If llPrintTokens
 		lcFile = "F:\Desarrollo\Mini_ERP\rutinas\tokens.txt"
 		If File(lcFile)
@@ -133,7 +137,9 @@ Procedure executeScript(tcScript)
 			=StrToFile(lcText, lcFile, 1)
 		EndFor
 		Modify File (lcFile)
+		return
 	EndIf
+		
 	Local loParser, loStatements
 	loParser = CreateObject("Parser", @laTokens)
 	loStatements = loParser.parse()
@@ -411,7 +417,7 @@ Define Class Parser as Custom
 				loResult = this.parseAttribute('name', ttIdent, ttString)
 			EndIf
 			If IsNull(loResult) and this.match(ttType)
-				loResult = this.parseAttribute('type', ttIdent, ttString)
+				loResult = this.parseType()
 			EndIf
 			If IsNull(loResult) and this.match(ttSize)
 				loResult = this.parseAttribute('size', ttNumber)
@@ -442,7 +448,7 @@ Define Class Parser as Custom
 		Return CreateObject("Node", loToken, loAttributes)
 	EndFunc
 	
-	Hidden function fieldsAttribute	
+	Hidden function fieldsAttribute
 		Local loToken, loFieldsList, loAttributes
 		loToken = this.oPrevious
 		this.consume(ttColon, "Se esperaba el símbolo ':' luego del atributo 'description'")
@@ -480,6 +486,21 @@ Define Class Parser as Custom
 		this.consume(ttNewLine, "Se esperaba un salto de línea")
 
 		Return CreateObject("Node", loToken, lvValue)
+	EndFunc
+	
+	Hidden function parseType
+		Local loToken, loTokenType
+		loToken = this.oPrevious
+		this.consume(ttColon, "Se esperaba el símbolo ':' luego del atributo 'type'")	
+		
+		If !Between(this.oPeek.nType, 200, 299)
+			MessageBox("Se esperaba un tipo de dato pero se obtuvo: " + this.oPeek.cLexeme, 16)
+			Return .null.
+		EndIf
+		loTokenType = this.advance()
+		
+		this.consume(ttNewLine, "Se esperaba un salto de línea")
+		Return CreateObject("Node", loToken, loTokenType)
 	EndFunc
 	
 	Hidden function match(t1, t2, t3)
@@ -553,7 +574,6 @@ Define Class Token As Custom
 			Local lcString
 			lcString = "[" + Alltrim(Str(This.nLine)) + ":" + Alltrim(Str(This.nCol)) + "](" + TokenName(This.nType) + ", " + Transform(This.vLiteral) + ")"
 		Catch to loEx
-			Set Step On
 			MessageBox(loEx.message)
 		EndTry
 		Return lcString
@@ -581,29 +601,29 @@ Function tokenName(tnType)
 		Return "ttPrimaryKey"
 	Case tnType == 8
 		Return "ttAllowNull"
-	Case tnType == 9
+	Case tnType == 200
 		Return "ttChar"
-	Case tnType == 10
+	Case tnType == 201
 		Return "ttVarchar"
-	Case tnType == 11
+	Case tnType == 202
 		Return "ttDecimal"
-	Case tnType == 12
+	Case tnType == 203
 		Return "ttDate"
-	Case tnType == 13
+	Case tnType == 204
 		Return "ttDateTime"
-	Case tnType == 14
+	Case tnType == 205
 		Return "ttDouble"
-	Case tnType == 15
+	Case tnType == 206
 		Return "ttFloat"
-	Case tnType == 16
+	Case tnType == 207
 		Return "ttInt"
-	Case tnType == 17
+	Case tnType == 208
 		Return "ttBool"
-	Case tnType == 18
+	Case tnType == 209
 		Return "ttText"
-	Case tnType == 19
+	Case tnType == 210
 		Return "ttVarBinary"
-	Case tnType == 20
+	Case tnType == 211
 		Return "ttBlob"
 	Case tnType == 21
 		Return "ttIdent"
