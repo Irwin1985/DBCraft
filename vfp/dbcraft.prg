@@ -3,7 +3,7 @@ Clear
 Local lcScript
 lcScript = FileToStr("F:\Desarrollo\Mini_ERP\Sical\Conmod.tmg")
 If Right(lcScript, 1) != Chr(10)
-	lcScript = lcScript + Chr(10)
+	lcScript = lcScript + Chr(13) + Chr(10)
 EndIf
 executeScript(lcScript)
 * End Sample
@@ -12,6 +12,19 @@ executeScript(lcScript)
 * Implementation
 * =================================================================================== *
 Procedure executeScript(tcScript)
+	#ifndef tkIdent
+		#Define tkIdent 1
+	#Endif
+	#ifndef tkPrimary
+		#Define tkPrimary 2
+	#Endif
+	#ifndef tkSymbol
+		#Define tkSymbol 3
+	#Endif
+	#ifndef tkGeneric
+		#Define tkGeneric 4
+	#endif
+
 	#ifndef ttTable
 		#Define ttTable 1
 	#Endif
@@ -101,23 +114,30 @@ Procedure executeScript(tcScript)
 	#Endif
 	#ifndef ttNewLine
 		#Define ttNewLine 30
-	#Endif	
-	Local loScanner, laTokens
+	#Endif
+
+	Local loScanner, laTokens, llPrintTokens
 	loScanner = Createobject("Scanner", tcScript)
 	laTokens = loScanner.scanTokens()
-	lcFile = "F:\Desarrollo\Mini_ERP\rutinas\tokens.txt"
-	If File(lcFile)
-		try
-			Delete File &lcFile
-		Catch
-		EndTry
+	If llPrintTokens
+		lcFile = "F:\Desarrollo\Mini_ERP\rutinas\tokens.txt"
+		If File(lcFile)
+			try
+				Delete File &lcFile
+			Catch
+			EndTry
+		EndIf
+		For Each loToken In laTokens
+			lcText = loToken.toString()
+			lcText = lcText + Chr(13) + Chr(10)
+			=StrToFile(lcText, lcFile, 1)
+		EndFor
+		Modify File (lcFile)
 	EndIf
-	For Each loToken In laTokens
-		lcText = loToken.toString()
-		lcText = lcText + Chr(13) + Chr(10)
-		=StrToFile(lcText, lcFile, 1)
-	EndFor
-	Modify File (lcFile)
+	Local loParser, loStatements
+	loParser = CreateObject("Parser", @laTokens)
+	loStatements = loParser.parse()
+	MessageBox(loStatements)
 Endproc
 
 * =================================================================================== *
@@ -224,7 +244,7 @@ Define Class Scanner As Custom
 		If This.oKeywords.Exists(lcLexeme)
 			lnTokenType = This.oKeywords.Item(lcLexeme)
 		Endif
-		This.addToken(lnTokenType, lcLexeme, lnCol)
+		This.addToken(lnTokenType, tkIdent, lcLexeme, lnCol)
 	EndProc
 
 	Hidden procedure readNumber
@@ -249,7 +269,7 @@ Define Class Scanner As Custom
 
 		lcLexeme = Substr(This.cSource, This.nStart, This.nCurrent-This.nStart)
 
-		Return This.addToken(ttNumber, lcLexeme, lnCol)
+		Return This.addToken(ttNumber, tkPrimary, lcLexeme, lnCol)
 	EndProc
 
 	Hidden procedure readString(tcStopChar)
@@ -264,7 +284,7 @@ Define Class Scanner As Custom
 		Enddo
 		lcLexeme = Substr(This.cSource, This.nStart+1, This.nCurrent-This.nStart-2)
 
-		Return This.addToken(ttString, lcLexeme, lnCol)
+		Return This.addToken(ttString, tkPrimary, lcLexeme, lnCol)
 	EndProc
 
 	Function scanTokens
@@ -289,9 +309,9 @@ Define Class Scanner As Custom
 		ch = This.advance()
 		Do Case
 		Case ch == ':'
-			This.addToken(ttColon, ch)			
+			This.addToken(ttColon, tkSymbol, ch)			
 		Case ch == '-' And !Isdigit(This.peek())
-			This.addToken(ttMinus, ch)
+			This.addToken(ttMinus, tkSymbol, ch)
 		Case Inlist(ch, '"', "'")
 			This.readString(ch)
 		Case ch == Chr(13)
@@ -300,7 +320,9 @@ Define Class Scanner As Custom
 			EndIf
 			this.advance() && skip chr(10)
 			this.nLine = this.nLine + 1
-			this.nCol = 1		
+			this.nCol = 1
+		Case ch == Chr(10)
+			* skip
 		Otherwise
 			If Isdigit(ch) Or (ch == '-' And Isdigit(This.peek()))
 				This.readNumber()
@@ -314,11 +336,12 @@ Define Class Scanner As Custom
 		Endcase
 	Endproc
 
-	Hidden Procedure addToken(tnType, tvLiteral, tnCol)
+	Hidden Procedure addToken(tnType, tnKind, tvLiteral, tnCol)
 		This.checkCapacity()
 		Local loToken,lnCol
 		lnCol = Iif(Empty(tnCol), this.nCol, tnCol)
 		loToken = Createobject("Token", tnType, "", tvLiteral, This.nLine, lnCol)
+		loToken.nKind = Iif(Empty(tnKind), tkGeneric, tnKind)
 		This.aTokens[this.nLength] = loToken
 		This.nLength = This.nLength + 1
 		this.nTokenAnt = tnType
@@ -346,10 +369,172 @@ Define Class Scanner As Custom
 Enddefine
 
 * =================================================================================== *
+* Parser Class
+* =================================================================================== *
+Define Class Parser as Custom
+	Hidden ;
+	oPeek, ;
+	oPrevious, ;
+	nCurrent
+	
+	Dimension aTokens[1]
+	nCurrent = 1
+
+	Procedure Init(taTokens)
+		=Acopy(taTokens, this.aTokens)
+	EndProc
+	
+	Function parse
+		Local loStatements
+		loStatements = CreateObject("Collection")
+		Do while !this.isAtEnd()
+			this.match(ttMinus)
+			loStatements.Add(this.declaration())
+		EndDo
+		Return loStatements
+	EndFunc
+	
+	Hidden function declaration
+		Local loResult
+		loResult = .null.
+		Try
+			If this.match(ttTable)
+				loResult = this.tableDeclaration()
+			EndIf
+			If IsNull(loResult) and this.match(ttDescription)
+				loResult = this.parseAttribute('description', ttString)
+			EndIf
+			If IsNull(loResult) and this.match(ttFields)
+				loResult = this.fieldsAttribute()
+			EndIf
+			If IsNull(loResult) and this.match(ttName)
+				loResult = this.parseAttribute('name', ttIdent, ttString)
+			EndIf
+			If IsNull(loResult) and this.match(ttType)
+				loResult = this.parseAttribute('type', ttIdent, ttString)
+			EndIf
+			If IsNull(loResult) and this.match(ttSize)
+				loResult = this.parseAttribute('size', ttNumber)
+			EndIf
+			If IsNull(loResult) and this.match(ttPrimaryKey)
+				loResult = this.parseAttribute('primaryKey', ttTrue, ttFalse)
+			EndIf
+			If IsNull(loResult) and this.match(ttAutoIncrement)
+				loResult = this.parseAttribute('autoIncrement', ttTrue, ttFalse)
+			EndIf
+		Catch to loEx
+			* TODO(irwin): sinchronyze
+		EndTry
+		Return loResult
+	EndFunc
+	
+	Hidden function tableDeclaration		
+		Local loToken, loAttributes
+		loToken = this.oPrevious
+		this.consume(ttColon, "Se esperaba el símbolo ':' luego del atributo 'table'")
+		this.consume(ttNewLine, "Se esperaba un salto de línea")				
+		loAttributes = CreateObject("Collection")
+
+		Do while !this.isAtEnd() and this.oPeek.nKind == tkIdent
+			loAttributes.Add(this.declaration())
+		EndDo
+				
+		Return CreateObject("Node", loToken, loAttributes)
+	EndFunc
+	
+	Hidden function fieldsAttribute	
+		Local loToken, loFieldsList, loAttributes
+		loToken = this.oPrevious
+		this.consume(ttColon, "Se esperaba el símbolo ':' luego del atributo 'description'")
+		this.consume(ttNewLine, "Se esperaba un salto de línea")
+		loAttributes = CreateObject("Collection")
+
+		Do while !this.isAtEnd() and this.match(ttMinus)
+			Do while this.oPeek.nKind == tkIdent
+				loAttributes.Add(this.declaration())
+			EndDo
+		EndDo
+		
+		Return CreateObject("Node", loToken, loFieldsList)
+	EndFunc
+
+	Hidden function parseAttribute(tcName, tnType1, tnType2)
+		Local loToken, lvValue, i, llMatched
+		loToken = this.oPrevious
+		this.consume(ttColon, "Se esperaba el símbolo ':' luego del atributo '" + tcName + "'")
+		llMatched = .f.
+		
+		For i = 1 to Pcount()-1
+			llMatched = this.match(Evaluate('tnType' + Alltrim(Str(i))))
+			If llMatched
+				exit
+			EndIf
+		EndFor
+		If !llMatched
+			* TODO(irwin): mostrar mensaje
+			MessageBox("Valor inválido para el atributo '", + tcName + "'", 16)
+			Return .null.
+		EndIf
+			
+		lvValue = this.oPrevious.vLiteral
+		this.consume(ttNewLine, "Se esperaba un salto de línea")
+
+		Return CreateObject("Node", loToken, lvValue)
+	EndFunc
+	
+	Hidden function match(t1, t2, t3)
+		Local i		
+		For i=1 to Pcount()
+			If this.check(Evaluate('t' + Alltrim(Str(i))))
+				this.advance()
+				Return .t.
+			endif
+		EndFor
+		Return .f.
+	EndFunc
+	
+	Hidden function consume(tnType, tcMessage)
+		If this.check(tnType)
+			Return this.advance()
+		EndIf
+
+		Error tcMessage
+	EndFunc
+	
+	Hidden function check(tnType)
+		If this.isAtEnd()
+			Return .f.
+		EndIf
+		Return this.oPeek.nType == tnType
+	EndFunc
+	
+	Hidden function advance
+		If !this.isAtEnd()
+			this.nCurrent = this.nCurrent + 1
+		EndIf
+		Return this.oPrevious
+	EndFunc
+	
+	Hidden Function isAtEnd
+		Return this.oPeek.nType == ttEOF
+	EndFunc
+	
+	Hidden Function oPeek_Access
+		Return this.aTokens[this.nCurrent]
+	EndFunc
+	
+	Hidden function oPrevious_Access
+		Return this.aTokens[this.nCurrent-1]
+	EndFunc
+		
+EndDefine
+
+* =================================================================================== *
 * Token Class
 * =================================================================================== *
 Define Class Token As Custom
 	nType = 0
+	nKind = 0
 	cLexeme = ''
 	vLiteral = .Null.
 	nLine = 0
@@ -443,3 +628,16 @@ Function tokenName(tnType)
 	Otherwise
 	EndCase
 EndFunc
+
+* ========================================================================= *
+* Node
+* ========================================================================= *
+Define Class Node as Custom
+	oToken = .null.
+	vValue = .null.
+	
+	Procedure init(toToken, tvValue)
+		this.oToken = toToken
+		this.vValue = tvValue
+	endproc
+EndDefine
