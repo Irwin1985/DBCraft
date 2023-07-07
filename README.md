@@ -32,7 +32,8 @@ DBCraft está inspirado en YAML, pero con algunas adaptaciones y ajustes para sa
 A continuación se muestra un ejemplo de cómo se vería la definición de una tabla en DBCraft:
 
 ```yaml
-- table: "clientes"
+- table:
+  name: clientes
   description: "Tabla que almacena la información de los clientes."
   fields:
     - name: id
