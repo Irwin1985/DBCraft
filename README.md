@@ -156,3 +156,12 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
 ## Licencia
 
 DBCraft se distribuye bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
+
+Do you like or benefit from my work? please consider make a donation, a cup of coffee would be nice!
+
+## Donaciones
+
+Si encuentras útiles las herramientas que he desarrollado y te gustaría apoyar mi trabajo, considera realizar una donación. Tu contribución ayudará a mantener y mejorar este proyecto, así como a financiar la creación de nuevas herramientas para programadores.
+
+[Cómprame un Café](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/donate/?hosted_button_id=LXQYXFP77AD2G)
+[Conviertete en mi Mecenas](https://www.patreon.com/IrwinRodriguez)
