@@ -146,6 +146,10 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
 
 ¡Contribuciones y sugerencias son bienvenidas! Si deseas colaborar con el desarrollo de DBCraft o tienes ideas para mejorarlo, no dudes en crear una solicitud de extracción (pull request) o abrir un problema (issue) en el repositorio.
 
+## Tutorial
+
+[Este tutorial](tutorial.md) te explicará todos y cada uno de los atributos que necesitas saber para comenzar a crear tus tablas.
+
 ## Licencia
 
 DBCraft se distribuye bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
