@@ -84,6 +84,7 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
     - name: id
       type: int
       size: 11
+      autoIncrement: true
       primaryKey: true
     - name: nombre
       type: varchar
@@ -100,6 +101,7 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
     - name: id
       type: int
       size: 11
+      autoIncrement: true
       primaryKey: true
     - name: cliente_id
       type: int
@@ -120,6 +122,7 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
     - name: id
       type: int
       size: 11
+      autoIncrement: true
       primaryKey: true
     - name: factura_id
       type: int
