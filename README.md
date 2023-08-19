@@ -163,6 +163,6 @@ Do you like or benefit from my work? please consider make a donation, a cup of c
 
 Si encuentras útiles las herramientas que he desarrollado y te gustaría apoyar mi trabajo, considera realizar una donación. Tu contribución ayudará a mantener y mejorar este proyecto, así como a financiar la creación de nuevas herramientas para programadores.
 
-[Cómprame un Café](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/donate/?hosted_button_id=LXQYXFP77AD2G)
+[Donar](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/donate/?hosted_button_id=LXQYXFP77AD2G)
 
 [Conviertete en mi Mecenas](https://www.patreon.com/IrwinRodriguez)
