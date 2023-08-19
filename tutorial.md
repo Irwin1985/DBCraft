@@ -1,7 +1,5 @@
 # DBCraft
 
-¡Gracias por la información adicional! En efecto, DBCraft es un intérprete que actualmente está desarrollado en Visual FoxPro y Windev, y es compatible con varios motores de bases de datos, como MSQL, MySQL, MariaDB, Firebird, SQLite y Postgres. Esto significa que los usuarios pueden utilizar DBCraft para definir tablas en bases de datos independientemente del motor que estén utilizando.
-
 # **Guía para Definir Tablas con DBCraft**
 
 **¡Bienvenido a la guía para definir tablas con DBCraft!** 
