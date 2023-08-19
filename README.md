@@ -38,7 +38,7 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
       autoIncrement: true
       description: "Identificador único auto incremental para el cliente."
 
-    - name: name
+    - name: nombre
       type: varchar
       size: 50
       allowNull: false
