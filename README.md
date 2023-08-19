@@ -77,7 +77,8 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
 
 ```yaml
 # Definición de la tabla "Clientes"
-- table: "Clientes"
+- table:
+  name: Clientes
   description: "Tabla que almacena información de los clientes."
   fields:
     - name: id
@@ -92,7 +93,8 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
       size: 200
 
 # Definición de la tabla "Facturas"
-- table: "Facturas"
+- table:
+  name: Facturas
   description: "Tabla que almacena información de las facturas."
   fields:
     - name: id
@@ -103,15 +105,16 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
       type: int
       size: 11
       foreignKey:
-        table: Clientes
-        field: id
+        fkTable: Clientes
+        fkField: id
         onDelete: cascade
         onUpdate: restrict
     - name: fecha
       type: date
 
 # Definición de la tabla "DetalleFactura"
-- table: "DetalleFactura"
+- table:
+  name: DetalleFactura
   description: "Tabla que almacena el detalle de las facturas."
   fields:
     - name: id
@@ -122,8 +125,8 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
       type: int
       size: 11
       foreignKey:
-        table: Facturas
-        field: id
+        fkTable: Facturas
+        fkField: id
         onDelete: cascade
         onUpdate: restrict
     - name: producto
@@ -133,8 +136,9 @@ A continuación se muestra un ejemplo de cómo se vería la definición de una t
       type: int
       size: 11
     - name: precio
-      type: decimal
-      size: 10,2
+      type: double
+      size: 10
+      decimal: 2
 ```
 
 ## Contribuciones
