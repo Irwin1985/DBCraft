@@ -3097,11 +3097,12 @@ Define Class MSSQL As DBEngine
 		If toField.autoIncrement
 			lcScript = lcScript + ' ' + this.addAutoIncrement()
 		EndIf
+
+		If toField.addDefault AND !toField.autoIncrement
+			lcScript = lcScript + " DEFAULT " + toField.Default
+		EndIf
 		
 		If !toField.allowNull
-			If toField.addDefault
-				lcScript = lcScript + " DEFAULT " + toField.Default
-			EndIf
 			lcScript = lcScript + " NOT NULL "				
 		EndIf
 		
@@ -3139,43 +3140,57 @@ Define Class MSSQL As DBEngine
 
 	* Y = Currency
 	Function visitYType(toFields)
-		toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
 		Return "MONEY"
 	Endfunc
 
 	* D = Date
 	Function visitDType(toFields)
-		toFields.Default = "'1753-01-01'"
+		if toFields.Default == "''"
+			toFields.Default = "'1753-01-01'"
+		endif
 		Return "DATE"
 	Endfunc
 
 	* T = DateTime
 	Function visitTType(toFields)
-		toFields.Default = "'1753-01-01 00:00:00.000'"
+		if toFields.Default == "''"
+			toFields.Default = "'1753-01-01 00:00:00.000'"
+		endif
 		Return "DATETIME"
 	Endfunc
 
 	* B = Double
 	Function visitBType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "FLOAT"
 	Endfunc
 
 	* F = Float
 	Function visitFType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "FLOAT"
 	Endfunc
 
 	* G = General
 	Function visitGType(toFields)
-		toFields.Default = "0x"
+		if toFields.Default == "''"
+			toFields.Default = "0x"
+		endif
 		Return "IMAGE"
 	Endfunc
 
 	* I = Integer
 	Function visitIType(toFields)
-		toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
 		Return "INT"
 	Endfunc
 
@@ -3192,16 +3207,22 @@ Define Class MSSQL As DBEngine
 	* N = Numeric
 	Function visitNType(toFields)
 		If Val(toFields.Decimal) > 0
-			toFields.Default = "0.0"
+			if toFields.Default == "''"
+				toFields.Default = "0.0"
+			endif
 		Else
-			toFields.Default = '0'
+			if toFields.Default == "''"
+				toFields.Default = '0'
+			endif
 		Endif
 		Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
 	* Q = VarBinary
 	Function visitQType(toFields)
-		toFields.Default = "0x"
+		if toFields.Default == "''"
+			toFields.Default = "0x"
+		endif
 		Return "VARBINARY(max)"
 	Endfunc
 
@@ -3212,7 +3233,9 @@ Define Class MSSQL As DBEngine
 
 	* W = Blob
 	Function visitWType(toFields)
-		toFields.Default = "0x"
+		if toFields.Default == "''"
+			toFields.Default = "0x"
+		endif
 		Return "IMAGE"
 	EndFunc
 Enddefine
@@ -3510,11 +3533,12 @@ Define Class MySQL As DBEngine
 		If toField.autoIncrement
 			lcScript = lcScript + ' ' + this.addAutoIncrement()
 		EndIf
+
+		If toField.addDefault AND !toField.autoIncrement
+			lcScript = lcScript + " DEFAULT " + toField.Default
+		EndIf
 		
 		If !toField.allowNull
-			If toField.addDefault
-				lcScript = lcScript + " DEFAULT " + toField.Default
-			EndIf
 			lcScript = lcScript + " NOT NULL "				
 		EndIf
 		
@@ -3556,31 +3580,41 @@ Define Class MySQL As DBEngine
 
 	* Y = Currency
 	Function visitYType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "DECIMAL(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
 	* D = Date
 	Function visitDType(toFields)
-		toFields.Default = "'1000-01-01'"
+		if toFields.Default == "''"
+			toFields.Default = "'1000-01-01'"
+		endif
 		Return "DATE"
 	Endfunc
 
 	* T = DateTime
 	Function visitTType(toFields)
-		toFields.Default = "'1000-01-01 00:00:00'"
+		if toFields.Default == "''"
+			toFields.Default = "'1000-01-01 00:00:00'"
+		endif
 		Return "DATETIME"
 	Endfunc
 
 	* B = Double
 	Function visitBType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "DOUBLE(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
 	* F = Float
 	Function visitFType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "FLOAT(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
@@ -3592,13 +3626,17 @@ Define Class MySQL As DBEngine
 
 	* I = Integer
 	Function visitIType(toFields)
-		toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
 		Return "INT"
 	Endfunc
 
 	* L = Logical
 	Function visitLType(toFields)
-		toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
 		Return "BOOL"
 	Endfunc
 
@@ -3611,16 +3649,22 @@ Define Class MySQL As DBEngine
 	* N = Numeric
 	Function visitNType(toFields)
 		If Val(toFields.Decimal) > 0
-			toFields.Default = "0.0"
-		Else
-			toFields.Default = '0'
+			if toFields.Default == "''"
+				toFields.Default = "0.0"
+			endif
+		else
+			if toFields.Default == "''"
+				toFields.Default = '0'
+			endif
 		Endif
 		Return "DECIMAL(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
 	* Q = VarBinary
 	Function visitQType(toFields)
-		toFields.Default = "0x"
+		if toFields.Default == "''"
+			toFields.Default = "0x"
+		endif
 		Local lcSize
 		lcSize = "255"
 		If Val(toFields.Size) > 0
@@ -3989,11 +4033,12 @@ Define Class Firebird As DBEngine
 		If toField.autoIncrement
 			lcScript = lcScript + ' ' + this.addAutoIncrement()
 		EndIf
+
+		If toField.addDefault AND !toField.autoIncrement
+			lcScript = lcScript + " DEFAULT " + toField.Default
+		EndIf
 		
 		If !toField.allowNull
-			If toField.addDefault
-				lcScript = lcScript + " DEFAULT " + toField.Default
-			EndIf
 			lcScript = lcScript + " NOT NULL "				
 		EndIf
 		
@@ -4042,27 +4087,37 @@ Define Class Firebird As DBEngine
     Endfunc
 
     Function visitYType(toFields)
-    	toFields.Default = "0.0"
+    	if toFields.Default == "''"
+	    	toFields.Default = "0.0"
+	    endif
         Return "DECIMAL(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
     Function visitDType(toFields)
-	    toFields.Default = "'1858-11-18'"
+    	if toFields.Default == "''"
+		    toFields.Default = "'1858-11-18'"
+		endif
         Return "DATE"
     Endfunc
 
     Function visitTType(toFields)
-	    toFields.Default = "'1858-11-18 00:00:00'"
+    	if toFields.Default == "''"
+		    toFields.Default = "'1858-11-18 00:00:00'"
+		endif
         Return "TIMESTAMP"
     Endfunc
 
     Function visitBType(toFields)
-	    toFields.Default = "0.0"
+    	if toFields.Default == "''"
+		    toFields.Default = "0.0"
+		endif
 	    Return "DECIMAL(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
     Function visitFType(toFields)
-	    toFields.Default = "0.0"
+    	if toFields.Default == "''"
+		    toFields.Default = "0.0"
+		endif
 	    Return "DECIMAL(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
@@ -4071,12 +4126,16 @@ Define Class Firebird As DBEngine
     Endfunc
 
     Function visitIType(toFields)
-	    toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
         Return "INTEGER"
     Endfunc
 
     Function visitLType(toFields)
-    	toFields.Default = "FALSE"
+    	if toFields.Default == "''"
+	    	toFields.Default = "FALSE"
+	    endif
         Return "BOOLEAN"
     Endfunc
 
@@ -4425,10 +4484,11 @@ Define Class SQLite As DBEngine
 			lcScript = lcScript + ' ' + this.addAutoIncrement()
 		EndIf
 
+		If toField.addDefault AND !toField.autoIncrement
+			lcScript = lcScript + " DEFAULT " + toField.Default
+		endif
+
 		If !toField.allowNull
-			If toField.addDefault
-				lcScript = lcScript + " DEFAULT " + toField.Default
-			EndIf
 			lcScript = lcScript + " NOT NULL "				
 		EndIf
 
@@ -4478,34 +4538,46 @@ Define Class SQLite As DBEngine
 	* Y = Currency
 	Function visitYType(toFields)
 		If Val(toFields.Decimal) > 0
-			toFields.Default = "0.0"
+			if toFields.Default == "''"
+				toFields.Default = "0.0"
+			endif
 		Else
-			toFields.Default = '0'
+			if toFields.Default == "''"
+				toFields.Default = '0'
+			endif
 		Endif
 		Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
 
 	* D = Date
 	Function visitDType(toFields)
-		toFields.Default = "'0001-01-01'"
+		if toFields.Default == "''"
+			toFields.Default = "'0001-01-01'"
+		endif
 		Return "DATE"
 	Endfunc
 
 	* T = DateTime
 	Function visitTType(toFields)
-		toFields.Default = "'0001-01-01 00:00:00.000'"
+		if toFields.Default == "''"
+			toFields.Default = "'0001-01-01 00:00:00.000'"
+		endif
 		Return "DATETIME"
 	Endfunc
 
 	* B = Double
 	Function visitBType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "DOUBLE"
 	Endfunc
 
 	* F = Float
 	Function visitFType(toFields)
-		toFields.Default = "0.0"
+		if toFields.Default == "''"
+			toFields.Default = "0.0"
+		endif
 		Return "REAL"
 	Endfunc
 
@@ -4532,9 +4604,13 @@ Define Class SQLite As DBEngine
 	* N = Numeric
 	Function visitNType(toFields)
 		If Val(toFields.Decimal) > 0
-			toFields.Default = "0.0"
+			if toFields.Default == "''"
+				toFields.Default = "0.0"
+			endif
 		Else
-			toFields.Default = '0'
+			if toFields.Default == "''"
+				toFields.Default = '0'
+			endif
 		Endif
 		Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
 	Endfunc
@@ -4902,11 +4978,12 @@ Define Class PostgreSQL As DBEngine
         If toField.autoIncrement
             lcScript = lcScript + ' ' + this.addAutoIncrement()
         EndIf
+
+        If toField.addDefault AND !toField.autoIncrement
+            lcScript = lcScript + " DEFAULT " + toField.Default
+        EndIf
         
         If !toField.allowNull
-            If toField.addDefault
-                lcScript = lcScript + " DEFAULT " + toField.Default
-            EndIf
             lcScript = lcScript + " NOT NULL "                
         EndIf
         
@@ -4947,27 +5024,37 @@ Define Class PostgreSQL As DBEngine
     Endfunc
 
     Function visitYType(toFields)
-	    toFields.Default = "0.0"
+    	if toFields.Default == "''"
+		    toFields.Default = "0.0"
+		endif
         Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
     Function visitDType(toFields)
-        toFields.Default = "'1858-11-18'"
+    	if toFields.Default == "''"
+	        toFields.Default = "'1858-11-18'"
+	    endif
         Return "DATE"
     Endfunc
 
     Function visitTType(toFields)
-        toFields.Default = "'1858-11-18 00:00:00'"
+    	if toFields.Default == "''"
+	        toFields.Default = "'1858-11-18 00:00:00'"
+	    endif
         Return "TIMESTAMP"
     Endfunc
 
     Function visitBType(toFields)
-        toFields.Default = "0.0"
+    	if toFields.Default == "''"
+	        toFields.Default = "0.0"
+	    endif
         Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
     Function visitFType(toFields)
-        toFields.Default = "0.0"
+    	if toFields.Default == "''"
+	        toFields.Default = "0.0"
+	    endif
         Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
     Endfunc
 
@@ -4976,12 +5063,16 @@ Define Class PostgreSQL As DBEngine
     Endfunc
 
     Function visitIType(toFields)
-        toFields.Default = "0"
+		if toFields.Default == "''"
+			toFields.Default = "0"
+		endif
         Return "INTEGER"
     Endfunc
 
     Function visitLType(toFields)
-        toFields.Default = "FALSE"
+    	if toFields.Default == "''"
+	        toFields.Default = "FALSE"
+	    endif
         Return "BOOLEAN"
     Endfunc
 
@@ -4990,9 +5081,13 @@ Define Class PostgreSQL As DBEngine
     Endfunc
 
     Function visitNType(toFields)
-	    toFields.Default = "0"
+    	if toFields.Default == "''"
+		    toFields.Default = "0"
+		endif
         If Val(toFields.Decimal) > 0
-        	toFields.Default = "0.0"
+        	if toFields.Default == "''"
+	        	toFields.Default = "0.0"
+	        endif
             Return "NUMERIC(" + toFields.Size + "," + toFields.Decimal + ")"
         Else
             Return "INTEGER"
