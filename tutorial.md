@@ -36,7 +36,6 @@ Ejemplo:
 ```
 
 > ***NOTA:** los nombres con espacios en blanco deben estar delimitados con comillas dobles o simples.*
-> 
 
 ## **Definición de Campos**
 
@@ -71,6 +70,8 @@ El atributo **`fields`** se utiliza para definir la lista de campos o columnas q
       type: varchar
       size: 100
 ```
+
+> ***NOTA:** ¿has notado que todos los atributos están alineados con los demás? es porque los espacios en blanco cuentan así que asegúrate de alinear bien tus atributos.*
 
 ## **Índices Compuestos**
 
