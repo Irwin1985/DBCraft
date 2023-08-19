@@ -19,13 +19,8 @@ DBCraft está inspirado en YAML, pero con algunas adaptaciones y ajustes para sa
 
 ## Lenguajes Soportados
 
-- Visual Foxpro 9.0 (En progreso)
-- Java (Planeado)
-- GoLang (Planeado)
-- C# (Planeado)
-- Ruby (Planeado)
-- Ring (Planeado)
-
+- Visual Foxpro 9.0
+- Windev (WLanguage)
 
 ## Ejemplo
 
