@@ -1910,6 +1910,10 @@ Define Class DBEngine As Custom
 		Endtry
 	Endproc
 
+	Function GetDBCraftVersion
+		Return "0.0.1 alfa"
+	endfunc
+
 	Procedure closeGroup(tcGroup)
 
 		If Empty(tcGroup)
@@ -1940,11 +1944,34 @@ Define Class DBEngine As Custom
 		Return .T.
 	Endproc
 
-	Procedure migrate(tcTableOrPath)
+	Function translate(tcScript)
+		Local loScripts as Collection, lcScript
+		loScripts = CreateObject("Collection")
+		lcScript = ""
+		If this.migrate(tcScript, loScripts)
+			Local lcHeader
+			Text to lcHeader noshow pretext 7 textmerge
+-- =======================================
+-- Script generado por DBCraft v<<this.GetDBCraftVersion()>>
+-- Fecha de Generación: <<Datetime()>>
+-- Desarrollado por: Irwin Rodriguez
+-- Apoyo de Mecenas: https://www.patreon.com/IrwinRodriguez
+-- Repositorio en GitHub: https://github.com/Irwin1985/DBCraft
+-- =======================================
+			EndText
+			lcScript = lcHeader + CRLF
+			For each lcSrc in loScripts
+				lcScript = lcScript + lcSrc
+			EndFor
+		EndIf
+		Return lcScript
+	endfunc
+
+	function migrate(tcTableOrPath, toScripts)
 		Local lbCloseTable, laTables[1], i, j, k, lcTableName, lcTablePath, lcPathAct, ;
 			lcFieldsScript, lcValuesScript, lcLeft, lcRight, lcDateAct, laDateFields[1], ;
 			lcMarkAct, lcCenturyAct, loEnv, lcScript, lbMigrateDBC, loTables, lcTableDescription, ;
-			loComposedIndexes
+			loComposedIndexes, lbResult
 
 		lcPathAct = Set("Default")
 		lcTableDescription = ""
@@ -2019,7 +2046,7 @@ Define Class DBEngine As Custom
 						Return
 					EndIf
 				Endif
-				This.createTable(lcTableName, lcTableDescription, loComposedIndexes, @laFields)
+				lbResult = This.createTable(lcTableName, lcTableDescription, loComposedIndexes, @laFields, toScripts)
 				
 				If Type('loTables') != 'O' && <<TMG SCRIPTS does not insert values>>
 					* Iterate fields
@@ -2057,7 +2084,8 @@ Define Class DBEngine As Custom
 		If lbMigrateDBC
 			Close Databases ALL
 		EndIf
-	Endproc
+		Return lbResult
+	endfunc
 
 	Function SQLExec(tcSQLCommand, tcCursorName)
 
@@ -2085,7 +2113,7 @@ Define Class DBEngine As Custom
 		Return .t.
 	Endfunc
 
-	Procedure createTable(tcTableName, tcTableDescription, toComposedIndexes, taFields)
+	function createTable(tcTableName, tcTableDescription, toComposedIndexes, taFields, toScripts)
 		Local i, lcScript, lcType, lcName, lcSize, lcDecimal, lbAllowNull, lcLongName, ;
 			lcComment, lnNextValue, lnStepValue, lcDefault, lcLeft, lcRight, loFields, ;
 			lcFieldsScript, lcInternalID, lbInsertInternalID, loIdxScript, loOptions
@@ -2191,8 +2219,15 @@ Define Class DBEngine As Custom
 				loIdxScript.Add(this.addSingleIndex(loFields.index))
 			EndIf
 		EndFor
-
-		lcScript = "CREATE TABLE " + lcLeft + tcTableName + lcRight + '('
+		Local lcHeader
+		Text to lcHeader noshow pretext 7 textmerge
+-- =======================================
+-- Tabla: <<tcTableName>>
+-- Descripción: <<tcTableDescription>>
+-- =======================================
+		EndText
+		
+		lcScript = lcHeader + CRLF + "CREATE TABLE " + lcLeft + tcTableName + lcRight + '('
 		If lbInsertInternalID
 			lcScript = lcScript + lcInternalID + ','
 		EndIf
@@ -2243,9 +2278,13 @@ Define Class DBEngine As Custom
 			lcScript = lcScript + this.addTableComment(tcTableDescription)
 		EndIf
 		
-		lcScript = lcScript + ';'		
-		If !This.SQLExec(lcScript)
-			Return .f.
+		lcScript = lcScript + ';'
+		If Pcount() = 5 && Recibimos toScripts
+			toScripts.Add(lcScript + CRLF)
+		else
+			If !This.SQLExec(lcScript)
+				Return .f.
+			EndIf
 		EndIf
 
 		If this.bExecuteFkScriptSeparately
@@ -2253,7 +2292,11 @@ Define Class DBEngine As Custom
 			* Agregamos las claves foráneas
 			If loFkScript.count > 0
 				For each cValue in loFkScript
-					This.SQLExec(cValue)
+					If Pcount() = 5 && Recibimos toScripts
+						toScripts.Add(cValue + CRLF)
+					else
+						This.SQLExec(cValue)
+					EndIf
 				EndFor
 			EndIf
 		EndIf
@@ -2263,7 +2306,11 @@ Define Class DBEngine As Custom
 			If loIdxScript.count > 0
 				* Ejecutamos los índices individuales
 				For each cValue in loIdxScript
-					This.SQLExec(cValue)
+					If Pcount() = 5 && Recibimos toScripts
+						toScripts.Add(cValue + CRLF)
+					else
+						This.SQLExec(cValue)
+					EndIf
 				EndFor
 			EndIf
 			
@@ -2271,12 +2318,16 @@ Define Class DBEngine As Custom
 				cValue = ''
 				* Ejecutamos los índices compuestos
 				For each cValue in loComposedScripts
-					This.SQLExec(cValue)
+					If Pcount() = 5 && Recibimos toScripts
+						toScripts.Add(cValue + CRLF)
+					else
+						This.SQLExec(cValue)
+					EndIf
 				EndFor
 			EndIf
 			Return .t.
 		EndIf
-	Endproc
+	endfunc
 
 	Procedure sqlError
 		Local Array laError[2]
@@ -3241,7 +3292,7 @@ Define Class MSSQL As DBEngine
 Enddefine
 
 * ==================================================== *
-* MySQL / MariaDB
+* MySQL
 * ==================================================== *
 Define Class MySQL As DBEngine
 
@@ -3309,7 +3360,10 @@ Define Class MySQL As DBEngine
 	Endfunc
 
 	Procedure selectDatabase
-		This.SQLExec("use " + This.cDatabase)
+		IF NOT This.SQLExec("use " + This.cDatabase)
+			MESSAGEBOX("No se pudo seleccionar la base de datos: '" + this.cDatabase + "'", 16, "Error")
+			RETURN .f.
+		ENDIF
 	Endproc
 
 	Function getTidScript
@@ -3439,7 +3493,7 @@ Define Class MySQL As DBEngine
 	EndFunc
 	
 	Function getDataBaseExistsScript(tcDatabase)
-		Return "SELECT CATALOG_NAME AS dbName FROM information_schema.schemata WHERE schema_name = '" + tcDatabase + "'"
+		Return "SELECT SCHEMA_NAME AS dbName FROM information_schema.schemata WHERE schema_name = '" + tcDatabase + "'"
 	EndFunc
 
 	Function addFieldComment(tcComment)
@@ -3684,6 +3738,13 @@ Define Class MySQL As DBEngine
 		toFields.addDefault = .F.
 		Return "BLOB"
 	EndFunc
+EndDefine
+
+* ==================================================== *
+* MariaDB
+* ==================================================== *
+Define Class MariaDB As MySQL
+
 EndDefine
 
 * ==================================================== *
