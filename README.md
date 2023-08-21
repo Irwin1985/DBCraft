@@ -3,6 +3,12 @@
 
 DBCraft es un proyecto de intérprete diseñado para facilitar las migraciones de bases de datos y la gestión de esquemas en múltiples lenguajes de programación. El objetivo principal de **DBCraft** es proporcionar una sintaxis intuitiva y unificada para definir y modificar estructuras de bases de datos, permitiendo a los desarrolladores evolucionar sus esquemas de manera sencilla y controlada.
 
+## Idiomas
+Esta documentación está disponible en los siguientes idiomas:
+- [Español](README.md)
+- [Inglés](README_EN.md)
+
+
 ## Inspiración en YAML
 
 DBCraft está inspirado en YAML, pero con algunas adaptaciones y ajustes para satisfacer las necesidades específicas de la gestión de esquemas de bases de datos. La sintaxis se ha simplificado y se han agregado atributos personalizados para definir campos, tablas, relaciones y otros elementos de manera intuitiva.
