@@ -3,6 +3,11 @@
 
 DBCraft is an interpreter project designed to facilitate database migrations and schema management in multiple programming languages. The primary goal of **DBCraft** is to provide an intuitive and unified syntax for defining and modifying database structures, allowing developers to evolve their schemas in a simple and controlled manner.
 
+## Idioms
+This documentation is available on the following languages:
+- [Español](README.md)
+- [English](english.md)
+
 ## Inspired by YAML
 
 DBCraft draws inspiration from [YAML](https://yaml.org/), but with adaptations and adjustments to meet the specific needs of managing database schemas. The syntax has been simplified, and custom attributes have been added to intuitively define fields, tables, relationships, and other elements.
