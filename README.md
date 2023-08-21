@@ -6,7 +6,7 @@ DBCraft es un proyecto de intérprete diseñado para facilitar las migraciones d
 ## Idiomas
 Esta documentación está disponible en los siguientes idiomas:
 - [Español](README.md)
-- [Inglés](README_EN.md)
+- [Inglés](english.md)
 
 
 ## Inspiración en YAML
