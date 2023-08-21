@@ -154,7 +154,7 @@ Contributions and suggestions are welcome! If you want to collaborate on the dev
 
 ## Tutorial
 
-[This tutorial](tutorial.md) will explain all the attributes you need to know to start creating your tables..
+[This tutorial](tutorial_en.md) will explain all the attributes you need to know to start creating your tables..
 
 ## License
 
