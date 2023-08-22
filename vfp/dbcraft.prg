@@ -908,7 +908,7 @@ EndProc
 
 Function executeTMGFile(tcFileName)
 	Local loTokens, loParser, loTables, loNode, lcScript
-	lcScript = Strconv(FileToStr(tcFileName), 11)
+	lcScript = Strconv(FileToStr(tcFileName),11)
 	If Right(lcScript, 1) != Chr(10)
 		lcScript = lcScript + Chr(13) + Chr(10)
 	EndIf
@@ -1495,7 +1495,6 @@ Define Class DBEngine As Custom
 
 	Function use(tcTable, tcFields, tcCriteria, tcGroup, tbReadOnly, tbNodata)
 		Local lcSqlTableName, lcAlias
-
 		this.getTableAndAlias(tcTable, @lcSqlTableName, @lcAlias)
 		
 		If Used(lcAlias)
@@ -1530,20 +1529,12 @@ Define Class DBEngine As Custom
 			loView.Tables = lcSqlTableName
 			loView.KeyFieldList = lcPrimaryKey
 			loView.SendUpdates = !tbReadOnly
-			loView.CursorSchema = "ID I (4),NOMBRE C (100),DNI C (10),EMAIL C (100),TELEFONO C (20)"
+
 			* Traer solo estructura para extraer información de las columnas.
 			loView.Nodata = .T.
 			If !loView.CursorFill()
 				this.sqlError()
 				Return .f.
-			EndIf
-
-			Local lbIsSQLite
-			lbIsSQLite = Lower(this.Name) == "sqlite"
-			If lbIsSQLite
-				this.SqlExec("SELECT name, type FROM pragma_table_info('" + lcSqlTableName + "');", "qFields")
-				Select Cast(name as c(200)) as name, Cast(type as c(25)) as type from qFields into cursor qFields readwrite
-				Update qFields set name = Strtran(name, Chr(0)), type = Strtran(type,Chr(0))
 			EndIf
 			
 			Select (lcAlias)
@@ -1551,17 +1542,6 @@ Define Class DBEngine As Custom
 
 			For i=1 To Afields(laFields)
 				lcField = laFields[i,1]
-				If lbIsSQLite and laFields[i,2] == 'M'
-					Select * from qFields where Upper(Alltrim(name)) == Upper(lcField) into array laRow
-					If Type('laRow', 1) == 'A'
-						lnSize = Val(StrExtract(laRow[2], '(', ')'))
-						If lnSize < 255
-							laFields[i,2] = 'C'
-							laFields[i,3] = lnSize
-							laFields[i,4] = 0
-						EndIf
-					EndIf
-				EndIf
 				lcUpdaTableFieldList = lcUpdaTableFieldList + lcField + ','
 				lcUpdateNameList = lcUpdateNameList + lcField + Space(1) + lcSqlTableName + '.' + lcField + ','
 
@@ -1578,18 +1558,13 @@ Define Class DBEngine As Custom
 					lcSchemaList = lcSchemaList + ')'
 				EndIf
 			EndFor
-			If lbIsSQLite
-				Use in qFields
-			EndIf
-			lcUpdaTableFieldList = Substr(lcUpdaTableFieldList, 1, Len(lcUpdaTableFieldList)-1)
-			lcUpdateNameList = Substr(lcUpdateNameList, 1, Len(lcUpdateNameList)-2)
+			lcUpdaTableFieldList = Substr(lcUpdaTableFieldList, 1, Len(lcUpdaTableFieldList)-1) && Remove trailing comma
+			lcUpdateNameList = Substr(lcUpdateNameList, 1, Len(lcUpdateNameList)-1) 			&& Remove trailing comma
 						
 			loView.UpdatableFieldList = lcUpdaTableFieldList
 			loView.UpdateNameList = lcUpdateNameList
 			loView.Nodata = tbNodata
-			* POLICIA
 			*loView.CursorSchema = lcSchemaList
-			* POLICIA
 
 			If !loView.CursorFill()
 				this.sqlError()
@@ -2194,7 +2169,14 @@ Define Class DBEngine As Custom
 				loFields.primaryKey 	= taFields[i, 20]
 				loFields.foreignKey 	= taFields[i, 21]
 				loFields.autoIncrement 	= taFields[i, 22]
-				loFields.index			= taFields[i, 23]
+				* Si el campo es autoincrement entonces primaryKey es .t.
+				If loFields.autoIncrement
+					loFields.primaryKey = .t.
+					loFields.allowNull = .f.
+					loFields.addDefault = .f.
+					loFields.default = "''"
+				EndIf
+				loFields.index = taFields[i, 23]
 			EndIf
 			If i > 1
 				lcFieldsScript = lcFieldsScript + ', '
@@ -2279,7 +2261,7 @@ Define Class DBEngine As Custom
 		EndIf
 		
 		lcScript = lcScript + ';'
-		If Pcount() = 5 && Recibimos toScripts
+		If Type('toScripts') == 'O'
 			toScripts.Add(lcScript + CRLF)
 		else
 			If !This.SQLExec(lcScript)
@@ -2292,7 +2274,7 @@ Define Class DBEngine As Custom
 			* Agregamos las claves foráneas
 			If loFkScript.count > 0
 				For each cValue in loFkScript
-					If Pcount() = 5 && Recibimos toScripts
+					If Type('toScripts') == 'O'
 						toScripts.Add(cValue + CRLF)
 					else
 						This.SQLExec(cValue)
@@ -2306,7 +2288,7 @@ Define Class DBEngine As Custom
 			If loIdxScript.count > 0
 				* Ejecutamos los índices individuales
 				For each cValue in loIdxScript
-					If Pcount() = 5 && Recibimos toScripts
+					If Type('toScripts') == 'O'
 						toScripts.Add(cValue + CRLF)
 					else
 						This.SQLExec(cValue)
@@ -2318,7 +2300,7 @@ Define Class DBEngine As Custom
 				cValue = ''
 				* Ejecutamos los índices compuestos
 				For each cValue in loComposedScripts
-					If Pcount() = 5 && Recibimos toScripts
+					If Type('toScripts') == 'O'
 						toScripts.Add(cValue + CRLF)
 					else
 						This.SQLExec(cValue)
